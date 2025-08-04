@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>સામાન્ય જ્ઞાન ક્વિઝ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Hind Vadodara', sans-serif;
+            background-color: #e0f7fa; /* Light Blue Background */
+            color: #004d40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 16px;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 95vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 2px solid #00796b;
+        }
+        .quiz-header {
+            background-color: #00796b;
+            color: white;
+            padding: 12px 20px;
+            border-bottom: 2px solid #004d40;
+        }
+        .quiz-body {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Enable scroll for question content if needed */
+        }
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            flex-grow: 1;
+        }
+        .option-btn {
+            background-color: #b2dfdb;
+            border: 2px solid #00796b;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #004d40;
+            font-weight: 500;
+        }
+        .option-btn:hover:not([disabled]) {
+            background-color: #00796b;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .option-btn.correct {
+            background-color: #4caf50 !important;
+            color: white !important;
+            border-color: #388e3c !important;
+        }
+        .option-btn.incorrect {
+            background-color: #f44336 !important;
+            color: white !important;
+            border-color: #d32f2f !important;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .explanation {
+            background-color: #e0f2f1;
+            border: 1px solid #009688;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            color: #00695c;
+        }
+        .quiz-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #b2dfdb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-btn {
+            background-color: #009688;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .nav-btn:hover {
+            background-color: #00796b;
+        }
+        .nav-btn:disabled {
+            background-color: #9e9e9e;
+            cursor: not-allowed;
+        }
+        #final-score-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header flex justify-between items-center">
+            <h1 class="text-xl font-bold">ભૂગોળ ક્વિઝ</h1>
+            <div id="score-container" class="text-lg font-semibold">સ્કોર: <span id="score">0</span></div>
+        </div>
+
+        <div class="quiz-body" id="quiz-body">
+            <div id="question-container">
+                <p class="question-text"><span id="question-number"></span> <span id="question-text"></span></p>
+                <div class="options-grid" id="options-grid">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div id="explanation-container" class="explanation hidden">
+                    <strong>સમજૂતી:</strong> <span id="explanation-text"></span>
+                </div>
+            </div>
+             <div id="final-score-container" class="hidden flex-col items-center justify-center h-full">
+                <h2 class="text-3xl font-bold mb-4">ક્વિઝ પૂર્ણ!</h2>
+                <p class="text-xl mb-2">તમારો અંતિમ સ્કોર:</p>
+                <p id="final-score" class="text-5xl font-bold text-teal-600"></p>
+                <button id="restart-btn" class="nav-btn mt-8">ફરીથી શરૂ કરો</button>
+            </div>
+        </div>
+
+        <div class="quiz-footer">
+            <button id="prev-btn" class="nav-btn">પાછલો</button>
+            <div id="question-counter" class="font-semibold"></div>
+            <button id="next-btn" class="nav-btn">આગલો</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            // Page 3
+            {
+                question: "આ બ્રહ્માંડમાં હાજર દરેક વસ્તુ જે પદાર્થથી બનેલી છે, તેને વૈજ્ઞાનિકોએ શું નામ આપ્યું છે?",
+                options: ["ઊર્જા", "દ્રવ્ય", "અણુ", "તત્વ"],
+                answer: "દ્રવ્ય",
+                explanation: "જે વસ્તુ સ્થાન ઘેરે છે અને દળ ધરાવે છે, તેને દ્રવ્ય કહેવાય છે."
+            },
+            {
+                question: "આકાશગંગાની સૌથી નજીકની સર્પાકાર ગેલેક્સી કઈ છે?",
+                options: ["ટ્રાયેન્ગુલમ ગેલેક્સી", "વ્હર્લપૂલ ગેલેક્સી", "એન્ડ્રોમેડા ગેલેક્સી", "સોમ્બ્રેરો ગેલેક્સી"],
+                answer: "એન્ડ્રોમેડા ગેલેક્સી",
+                explanation: "એન્ડ્રોમેડા એક સર્પાકાર ગેલેક્સી છે, જે પૃથ્વીથી 2.5 મિલિયન પ્રકાશ વર્ષ દૂર છે."
+            },
+            {
+                question: "બિગ બેંગ સિદ્ધાંત કોના દ્વારા રજૂ કરવામાં આવ્યો હતો?",
+                options: ["આલ્બર્ટ આઈન્સ્ટાઈન", "એડવિન હબલ", "જ્યોર્જ લેમેત્રે", "સ્ટીફન હોકિંગ"],
+                answer: "જ્યોર્જ લેમેત્રે",
+                explanation: "બેલ્જિયમના વૈજ્ઞાનિક જ્યોર્જ લેમેત્રેએ 1927માં બિગ બેંગ સિદ્ધાંત રજૂ કર્યો હતો."
+            },
+            {
+                question: "આપણું બ્રહ્માંડ કેટલું જૂનું છે?",
+                options: ["4.5 અબજ વર્ષ", "10 અબજ વર્ષ", "13.7 અબજ વર્ષ", "20 અબજ વર્ષ"],
+                answer: "13.7 અબજ વર્ષ",
+                explanation: "NASA અનુસાર બ્રહ્માંડની ઉત્પત્તિ લગભગ 13.7 અબજ વર્ષ પૂર્વે થઈ હતી."
+            },
+            {
+                question: "આકાશગંગા (Milky Way)નો આકાર કેવો છે?",
+                options: ["લંબગોળ", "અનિયમિત", "ગોળાકાર", "સર્પાકાર"],
+                answer: "સર્પાકાર",
+                explanation: "આપણી આકાશગંગા સર્પાકાર આકારની છે, જેમાં ઘૂમતી ભુજાઓ હોય છે."
+            },
+            {
+                question: "નીચેનામાંથી કયું આકાશમાં એક તારામંડળ નથી?",
+                options: ["સપ્તર્ષિ", "મૃગ", "લુબ્ધક (વ્યાધ)", "શર્મિષ્ઠા"],
+                answer: "લુબ્ધક (વ્યાધ)",
+                explanation: "લુબ્ધક (Sirius) એક તારો છે, તારામંડળ નથી."
+            },
+            {
+                question: "ગેસ, ધૂળ અને અબજો તારાઓના વિશાળ સંગ્રહને શું કહેવાય છે?",
+                options: ["ગ્રહમંડળ", "તારામંડળ", "આકાશગંગા", "નિહારિકા"],
+                answer: "આકાશગંગા",
+                explanation: "અબજો તારા, ગેસ અને ધૂળથી બનેલી રચનાને આકાશગંગા કહેવાય છે."
+            },
+            {
+                question: "બ્રહ્માંડના અભ્યાસને કયા નામે ઓળખવામાં આવે છે?",
+                options: ["ખગોળશાસ્ત્ર", "કોસ્મોલોજી", "જ્યોતિષશાસ્ત્ર", "ભૂસ્તરશાસ્ત્ર"],
+                answer: "કોસ્મોલોજી",
+                explanation: "બ્રહ્માંડના અભ્યાસને કોસ્મોલોજી કહેવાય છે."
+            },
+            {
+                question: "તે એક્સોપ્લેનેટનું નામ જણાવો જેને પૃથ્વીની બહેન માનવામાં આવે છે.",
+                options: ["પ્રોક્સિમા સેંટૌરી બી", "ટ્રેપિસ્ટ-1ઈ", "કેપ્લર 452 બી", "કેપ્લર-186એફ"],
+                answer: "કેપ્લર 452 બી",
+                explanation: "કેપ્લર-452 બીને પૃથ્વી-2.0 પણ કહેવાય છે, તે પૃથ્વી જેવો ગ્રહ છે."
+            },
+            {
+                question: "હેલીનો ધૂમકેતુ આગલી વખતે ક્યારે દેખાશે?",
+                options: ["2041", "2051", "2061", "2071"],
+                answer: "2061",
+                explanation: "હેલીનો ધૂમકેતુ દર 76 વર્ષે દેખાય છે, છેલ્લી વાર 1986માં અને આગલી વાર 2061માં દેખાશે."
+            },
+            // Page 4
+            {
+                question: "કુલ કેટલા તારામંડળોને નામ આપવામાં આવ્યું છે?",
+                options: ["77", "88", "99", "101"],
+                answer: "88",
+                explanation: "ખગોળશાસ્ત્રમાં કુલ 88 તારામંડળ માનવામાં આવ્યા છે, જેમાં 'હાઇડ્રા' સૌથી મોટું છે."
+            },
+            {
+                question: "તારાઓ મુખ્યત્વે કયા વાયુઓથી બનેલા હોય છે?",
+                options: ["ઓક્સિજન અને નાઇટ્રોજન", "હાઇડ્રોજન અને હિલીયમ", "કાર્બન અને ઓક્સિજન", "નિયોન અને આર્ગોન"],
+                answer: "હાઇડ્રોજન અને હિલીયમ",
+                explanation: "તારાઓનું નિર્માણ મુખ્યત્વે હાઇડ્રોજન અને હિલીયમથી થાય છે."
+            },
+            {
+                question: "'ગ્રેટ બિયર' કોનું નામ છે?",
+                options: ["એક ગ્રહ", "એક તારો", "એક તારામંડળ", "એક આકાશગંગા"],
+                answer: "એક તારામંડળ",
+                explanation: "ગ્રેટ બિયરને સપ્તર્ષિ અથવા ઉર્સા મેજર તારામંડળ પણ કહેવાય છે."
+            },
+            {
+                question: "રાત્રે આકાશમાં સૌથી તેજસ્વી તારો કયો છે?",
+                options: ["ધ્રુવ તારો", "વેગા", "સીરિયસ A (વ્યાધ)", "આલ્ફા સેંટૌરી"],
+                answer: "સીરિયસ A (વ્યાધ)",
+                explanation: "સીરિયસ A પૃથ્વીથી 8.6 પ્રકાશ વર્ષ દૂર સ્થિત સૌથી તેજસ્વી તારો છે."
+            },
+            {
+                question: "હાઇડ્રોજન, હિલીયમ અને ધૂળના વાદળને શું કહેવાય છે?",
+                options: ["આકાશગંગા", "બ્લેક હોલ", "નેબ્યુલા (નિહારિકા)", "ઉલ્કાપિંડ"],
+                answer: "નેબ્યુલા (નિહારિકા)",
+                explanation: "નેબ્યુલા (નિહારિકા) તે સ્થાન છે જ્યાં તારાઓનો જન્મ થાય છે."
+            },
+            // Page 5
+            {
+                question: "સૌરમંડળનું સૂર્યકેન્દ્રીય મોડેલ સૌપ્રથમ કોણે રજૂ કર્યું હતું?",
+                options: ["ટોલેમી", "ગેલિલિયો", "નિકોલસ કોપરનિકસ", "કેપ્લર"],
+                answer: "નિકોલસ કોપરનિકસ",
+                explanation: "કોપરનિકસે સૂર્યને કેન્દ્રમાં રાખીને ગ્રહોની ગતિનું મોડેલ આપ્યું."
+            },
+            {
+                question: "સૂર્ય અથવા અન્ય તારાઓની ઉર્જાનો સ્ત્રોત શું છે?",
+                options: ["નાભિકીય વિખંડન", "નાભિકીય સંલયન", "રાસાયણિક પ્રક્રિયા", "દહન"],
+                answer: "નાભિકીય સંલયન",
+                explanation: "હાઇડ્રોજન પરમાણુના સંલયનથી સૂર્યમાં ઉર્જા ઉત્પન્ન થાય છે."
+            },
+            {
+                question: "સૂર્યના પ્રકાશને પૃથ્વી સુધી પહોંચવામાં કેટલો સમય લાગે છે?",
+                options: ["5 મિનિટ", "8 મિનિટ 20 સેકન્ડ", "10 મિનિટ", "12 મિનિટ 30 સેકન્ડ"],
+                answer: "8 મિનિટ 20 સેકન્ડ",
+                explanation: "સૂર્યથી પ્રકાશને પૃથ્વી સુધી આવવામાં લગભગ 500 સેકન્ડ લાગે છે."
+            },
+            {
+                question: "પૂર્ણ સૂર્યગ્રહણ ત્યારે થાય છે જ્યારે -",
+                options: ["પૃથ્વી, સૂર્ય અને ચંદ્રની વચ્ચે આવે છે", "સૂર્ય, ચંદ્ર અને પૃથ્વી એક સીધી રેખામાં હોય", "ચંદ્ર, પૃથ્વી અને સૂર્યની વચ્ચે આવે છે", "સૂર્ય, પૃથ્વી અને ચંદ્રની વચ્ચે આવે છે"],
+                answer: "સૂર્ય, ચંદ્ર અને પૃથ્વી એક સીધી રેખામાં હોય",
+                explanation: "પૂર્ણ સૂર્યગ્રહણ ત્યારે થાય છે જ્યારે ચંદ્ર, સૂર્ય અને પૃથ્વીની વચ્ચે આવી જાય છે."
+            },
+            // Page 6
+            {
+                question: "કયા ગ્રહનો કોઈ પણ ચંદ્ર નથી?",
+                options: ["મંગળ અને ગુરુ", "શુક્ર અને બુધ", "શનિ અને યુરેનસ", "પૃથ્વી અને મંગળ"],
+                answer: "શુક્ર અને બુધ",
+                explanation: "બુધ અને શુક્ર એવા બે ગ્રહો છે જેમની પાસે કોઈ કુદરતી ઉપગ્રહ નથી."
+            },
+            {
+                question: "કયા ગ્રહને 'પૃથ્વીના જોડિયા' તરીકે ઓળખવામાં આવે છે?",
+                options: ["મંગળ", "બુધ", "ગુરુ", "શુક્ર"],
+                answer: "શુક્ર",
+                explanation: "શુક્ર આકાર, ઘનતા અને વ્યાસમાં પૃથ્વી સમાન હોવાને કારણે જોડિયા ગ્રહ કહેવાય છે."
+            },
+            {
+                question: "પૃથ્વીનો આકાર કેવો છે?",
+                options: ["સંપૂર્ણ ગોળ", "ચપટો ગોળ", "લંબગોળ", "ચોરસ"],
+                answer: "ચપટો ગોળ",
+                explanation: "પૃથ્વી ધ્રુવો પર ચપટી અને વિષુવવૃત્ત પર ઉપસેલી છે, તેથી તે ચપટો ગોળ છે."
+            },
+            // Page 7
+            {
+                question: "મંગળ ગ્રહને કયા નામે ઓળખવામાં આવે છે?",
+                options: ["વાદળી ગ્રહ", "લીલો ગ્રહ", "લાલ ગ્રહ", "પીળો ગ્રહ"],
+                answer: "લાલ ગ્રહ",
+                explanation: "મંગળ ગ્રહની સપાટી પર આયર્ન ઓક્સાઈડ હોવાને કારણે તે લાલ દેખાય છે."
+            },
+            {
+                question: "વિશાળ ગ્રેટ રેડ સ્પોટ કયા ગ્રહ સાથે સંબંધિત છે?",
+                options: ["શનિ", "બૃહસ્પતિ (ગુરુ)", "યુરેનસ", "નેપ્ચ્યુન"],
+                answer: "બૃહસ્પતિ (ગuru)",
+                explanation: "ગ્રેટ રેડ સ્પોટ બૃહસ્પતિ ગ્રહ પર સ્થિત એક વિશાળ તોફાની ક્ષેત્ર છે."
+            },
+            {
+                question: "'બ્લુ મૂન' શું હોય છે?",
+                options: ["ચંદ્ર વાદળી દેખાય ત્યારે", "મહિનામાં આવતો બીજો પૂરો ચાંદ", "ચંદ્રગ્રહણ", "વર્ષનો પહેલો પૂરો ચાંદ"],
+                answer: "મહિનામાં આવતો બીજો પૂરો ચાંદ",
+                explanation: "જ્યારે એક કેલેન્ડર માસમાં બે પૂર્ણિમા હોય છે, ત્યારે બીજી પૂર્ણિમાને બ્લુ મૂન કહેવાય છે."
+            },
+            // Page 8
+            {
+                question: "ભૂ-પર્પટીમાં સૌથી વધુ વિપુલ પ્રમાણમાં જોવા મળતી ધાતુ કઈ છે?",
+                options: ["લોખંડ", "તાંબુ", "એલ્યુમિનિયમ", "સોનું"],
+                answer: "એલ્યુમિનિયમ",
+                explanation: "ઓક્સિજન અને સિલિકોન પછી એલ્યુમિનિયમ ભૂ-પર્પટીની મુખ્ય ધાતુ છે."
+            },
+            {
+                question: "પૃથ્વી પર જોવા મળતો સૌથી સઘન પદાર્થ કયો છે?",
+                options: ["હીરો", "પ્લેટિનમ", "ઓસ્મિયમ", "પારો"],
+                answer: "ઓસ્મિયમ",
+                explanation: "ઓસ્મિયમ ધાતુ પૃથ્વી પર સૌથી વધુ ઘનતાવાળી માનવામાં આવે છે."
+            },
+            // Page 9
+            {
+                question: "ભારતમાં વર્ષનો સૌથી નાનો દિવસ ક્યારે હોય છે?",
+                options: ["21 જૂન", "22 ડિસેમ્બર", "21 માર્ચ", "23 સપ્ટેમ્બર"],
+                answer: "22 ડિસેમ્બર",
+                explanation: "22 ડિસેમ્બરે સૂર્ય મકર રેખા પર લંબવત પડે છે અને ભારતમાં (ઉત્તરી ગોળાર્ધમાં) દિવસ સૌથી નાનો હોય છે."
+            },
+            {
+                question: "કર્ક રેખા કયા અક્ષાંશ પર સ્થિત છે?",
+                options: ["23.5° દક્ષિણ અક્ષાંશ", "0° અક્ષાંશ", "23.5° ઉત્તરી અક્ષાંશ", "66.5° ઉત્તરી અક્ષાંશ"],
+                answer: "23.5° ઉત્તરી અક્ષાંશ",
+                explanation: "તે ઉત્તરી ગોળાર્ધમાં 23.5° પર સ્થિત મુખ્ય અક્ષાંશ રેખા છે."
+            },
+            // Page 10
+            {
+                question: "ગ્રેનાઈટ કયા પ્રકારનો ખડક છે?",
+                options: ["અવસાદી ખડક", "રૂપાંતરિત ખડક", "આગ્નેય ખડક", "જૈવિક ખડક"],
+                answer: "આગ્નેય ખડક",
+                explanation: "તે આંતરિક મેગ્માના ઠંડા થવાથી બનેલો આગ્નેય ખડક છે."
+            },
+            {
+                question: "પ્લેટ વિવર્તનનો જનક કોને માનવામાં આવે છે?",
+                options: ["આલ્ફ્રેડ વેગેનર", "ચાર્લ્સ ડાર્વિન", "જેમ્સ હટન", "આર્થર હોમ્સ"],
+                answer: "આલ્ફ્રેડ વેગેનર",
+                explanation: "તેમણે મહાદ્વીપીય વિસ્થાપન સિદ્ધાંત આપ્યો, જે પ્લેટ ટેક્ટોનિક્સનો આધાર છે."
+            },
+            // Page 11
+            {
+                question: "ભૂકંપની તીવ્રતા શેનાથી માપવામાં આવે છે?",
+                options: ["બેરોમીટર", "રિક્ટર સ્કેલ", "એનિમોમીટર", "હાઇગ્રોમીટર"],
+                answer: "રિક્ટર સ્કેલ",
+                explanation: "રિક્ટર સ્કેલ 1 થી 9 સુધીની તીવ્રતાને દર્શાવે છે."
+            },
+            {
+                question: "કયા જ્વાળામુખીને 'ભૂમધ્ય સાગરનો પ્રકાશ સ્તંભ' કહેવામાં આવે છે?",
+                options: ["માઉન્ટ એટના", "વેસુવિયસ", "સ્ટ્રોમ્બોલી", "માઉન્ટ ફુજી"],
+                answer: "સ્ટ્રોમ્બોલી",
+                explanation: "તે ઇટલીનો સક્રિય જ્વાળામુખી છે જે વારંવાર લાવા ઓકતો રહે છે."
+            },
+            // Page 12
+            {
+                question: "પૃથ્વીના વાતાવરણનું સૌથી નીચલું સ્તર કયું છે?",
+                options: ["સમતાપમંડળ", "મધ્યમંડળ", "ક્ષોભ મંડળ", "આયનમંડળ"],
+                answer: "ક્ષોભ મંડળ",
+                explanation: "ક્ષોભમંડળ પૃથ્વીની સપાટીથી લઈને લગભગ 18 કિ.મી. સુધી ફેલાયેલું સૌથી નીચલું સ્તર છે, જેમાં હવામાન સંબંધી તમામ ઘટનાઓ બને છે."
+            },
+            {
+                question: "ઓઝોન સ્તર વાતાવરણના કયા સ્તરમાં સૌથી વધુ ગાઢ હોય છે?",
+                options: ["ક્ષોભ મંડળ", "સમતાપમંડળ", "મધ્યમંડળ", "તાપમંડળ"],
+                answer: "સમતાપમંડળ",
+                explanation: "સમતાપમંડળમાં 15-35 કિ.મી. ઊંચાઈ વચ્ચે ઓઝોન ગેસ સૌથી વધુ જોવા મળે છે, જે UV કિરણોને રોકે છે."
+            },
+            // Page 13
+            {
+                question: "સૂર્યની પારજાંબલી કિરણોથી પૃથ્વીને કોણ સુરક્ષિત રાખે છે?",
+                options: ["નાઇટ્રોજન સ્તર", "ઓક્સિજન સ્તર", "ઓઝોન સ્તર", "કાર્બન સ્તર"],
+                answer: "ઓઝોન સ્તર",
+                explanation: "ઓઝોન સ્તર સમતાપમંડળમાં જોવા મળે છે, જે હાનિકારક UV કિરણોને શોષી લે છે."
+            },
+            {
+                question: "વાતાવરણના કયા સ્તરથી રેડિયો સંચાર શક્ય બને છે?",
+                options: ["ક્ષોભ મંડળ", "સમતાપમંડળ", "મધ્યમંડળ", "આયનમંડળ"],
+                answer: "આયનમંડળ",
+                explanation: "આયનમંડળમાં આયનિત કણોની હાજરી રેડિયો તરંગોને પરાવર્તિત કરે છે, જેનાથી સંચાર શક્ય બને છે."
+            },
+            // Page 14
+            {
+                question: "વિશ્વનો સૌથી નાનો મહાદ્વીપ કયો છે?",
+                options: ["યુરોપ", "ઓસ્ટ્રેલિયા", "દક્ષિણ અમેરિકા", "એન્ટાર્કટિકા"],
+                answer: "ઓસ્ટ્રેલિયા",
+                explanation: "તે સૌથી નાનો અને સૌથી ઓછી વસ્તી ધરાવતો મહાદ્વીપ છે."
+            },
+            {
+                question: "મૃત સાગર કયા મહાદ્વીપમાં સ્થિત છે?",
+                options: ["આફ્રિકા", "યુરોપ", "એશિયા", "ઓસ્ટ્રેલિયા"],
+                answer: "એશિયા",
+                explanation: "તે ઇઝરાયેલ અને જોર્ડન વચ્ચે અત્યંત ખારાશવાળો જળ નિકાય છે."
+            },
+            {
+                question: "પૃથ્વી પર જાણીતું સૌથી ઊંડું બિંદુ ક્યાં સ્થિત છે?",
+                options: ["જાવા ગર્ત", "પ્યુર્ટો રિકો ગર્ત", "મરિયાના ખાડી", "સુંડા ગર્ત"],
+                answer: "મરિયાના ખાડી",
+                explanation: "તેના દક્ષિણી ભાગમાં સ્થિત ચેલેન્જર ગર્ત પૃથ્વીનો સૌથી ઊંડો ભાગ છે."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = new Array(quizData.length).fill(null);
+
+        const questionContainer = document.getElementById('question-container');
+        const questionNumberEl = document.getElementById('question-number');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsGridEl = document.getElementById('options-grid');
+        const explanationContainerEl = document.getElementById('explanation-container');
+        const explanationTextEl = document.getElementById('explanation-text');
+        const scoreEl = document.getElementById('score');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const questionCounterEl = document.getElementById('question-counter');
+        const finalScoreContainer = document.getElementById('final-score-container');
+        const quizBody = document.getElementById('quiz-body');
+        const finalScoreEl = document.getElementById('final-score');
+        const restartBtn = document.getElementById('restart-btn');
+
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                showFinalScore();
+                return;
+            }
+
+            // Reset state
+            explanationContainerEl.classList.add('hidden');
+            optionsGridEl.innerHTML = '';
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionNumberEl.textContent = `${currentQuestionIndex + 1}.`;
+            questionTextEl.textContent = currentQuestion.question;
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-btn');
+                button.addEventListener('click', () => selectAnswer(option, button));
+                optionsGridEl.appendChild(button);
+            });
+
+            updateNavigation();
+            restoreAnswerState();
+        }
+
+        function selectAnswer(selectedOption, button) {
+            if (userAnswers[currentQuestionIndex] !== null) return; // Already answered
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            const isCorrect = selectedOption === currentQuestion.answer;
+            
+            userAnswers[currentQuestionIndex] = {
+                selected: selectedOption,
+                correct: currentQuestion.answer
+            };
+
+            if (isCorrect) {
+                score += 1;
+                button.classList.add('correct');
+            } else {
+                score -= 0.25;
+                button.classList.add('incorrect');
+                // Highlight the correct answer
+                Array.from(optionsGridEl.children).forEach(btn => {
+                    if (btn.textContent === currentQuestion.answer) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            scoreEl.textContent = score.toFixed(2);
+            explanationTextEl.textContent = currentQuestion.explanation;
+            explanationContainerEl.classList.remove('hidden');
+
+            // Disable all options
+            Array.from(optionsGridEl.children).forEach(btn => {
+                btn.disabled = true;
+            });
+        }
+        
+        function restoreAnswerState() {
+            const answerData = userAnswers[currentQuestionIndex];
+            if (answerData) {
+                const { selected, correct } = answerData;
+                const isCorrect = selected === correct;
+                
+                Array.from(optionsGridEl.children).forEach(button => {
+                    if (button.textContent === selected) {
+                        button.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    }
+                    if (button.textContent === correct) {
+                        button.classList.add('correct');
+                    }
+                    button.disabled = true;
+                });
+
+                explanationTextEl.textContent = quizData[currentQuestionIndex].explanation;
+                explanationContainerEl.classList.remove('hidden');
+            }
+        }
+
+
+        function updateNavigation() {
+            questionCounterEl.textContent = `પ્રશ્ન ${currentQuestionIndex + 1} / ${quizData.length}`;
+            prevBtn.disabled = currentQuestionIndex === 0;
+            if (currentQuestionIndex === quizData.length - 1) {
+                nextBtn.textContent = "સમાપ્ત";
+            } else {
+                nextBtn.textContent = "આગલો";
+            }
+        }
+        
+        function showFinalScore() {
+            questionContainer.classList.add('hidden');
+            finalScoreContainer.classList.remove('hidden');
+            finalScoreContainer.classList.add('flex');
+            finalScoreEl.textContent = score.toFixed(2);
+            nextBtn.disabled = true;
+            prevBtn.disabled = true;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers.fill(null);
+            scoreEl.textContent = '0';
+            finalScoreContainer.classList.add('hidden');
+            finalScoreContainer.classList.remove('flex');
+            questionContainer.classList.remove('hidden');
+            nextBtn.disabled = false;
+            loadQuestion();
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length) {
+                currentQuestionIndex++;
+                if (currentQuestionIndex === quizData.length) {
+                    showFinalScore();
+                } else {
+                    loadQuestion();
+                }
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        });
+        
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Initial Load
+        loadQuestion();
+    </script>
+
+</body>
+</html>
